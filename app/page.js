@@ -4,6 +4,7 @@ import { FiSend, FiUser, FiMoreVertical, FiArrowLeft } from "react-icons/fi";
 import { BsCircleFill } from "react-icons/bs";
 import { persona } from "@/lib/persona";
 import { getPersonaId } from "@/lib/persona";
+import Image from "next/image";
 
 const ChatUI = () => {
   const [contacts, setContacts] = useState(persona);
@@ -158,7 +159,7 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
                 setSidebarOpen(false);
               }}
             >
-              <img
+              <Image
                 src={contact.avater}
                 alt={`${contact.name}'s avatar`}
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full mr-3 md:mr-4"
