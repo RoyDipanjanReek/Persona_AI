@@ -159,10 +159,11 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
                 setSidebarOpen(false);
               }}
             >
-              <Image
+              <img
                 src={contact.avater}
                 alt={`${contact.name}'s avatar`}
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full mr-3 md:mr-4"
+                className="h-10 w-10 md:w-12 md:h-12 rounded-full mr-3 md:mr-4"
+                
               />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-black text-sm md:text-base truncate">
