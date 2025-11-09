@@ -3,13 +3,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { FiSend, FiUser, FiMoreVertical } from "react-icons/fi";
 import { BsCircleFill } from "react-icons/bs";
 import { persona } from "@/lib/persona";
-
+import { getPersonaId } from "@/lib/persona";
 
 const ChatUI = () => {
   const [contacts, setContacts] = useState(persona);
 
   const [currentChat, setCurrentChat] = useState(persona[0]);
-  const [messages, setMessages] = useState([]);
+  const [chatHistory, setChatHistory] = useState({});
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatHistoryRef = useRef(null);
@@ -18,14 +18,16 @@ const ChatUI = () => {
     if (chatHistoryRef.current) {
       chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [chatHistory, currentChat]);
 
-  // {Handle submit function start here--}
+  const message = chatHistory[currentChat.id] || [];
+
+  // Handle submit function start here--
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
     const userMsg = {
-      id: messages.length + 1,
+      id: Date.now(),
       text: newMessage,
       sender: "user",
       timestamp: new Date().toLocaleTimeString([], {
@@ -34,12 +36,16 @@ const ChatUI = () => {
       }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setChatHistory((prev) => ({
+      ...prev,
+      [currentChat.id]: [...(prev[currentChat.id] || []), userMsg],
+    }));
+
     setNewMessage("");
     setIsTyping(true);
 
     try {
-      const res = await fetch("/api/sendmessage", {
+      const res = await fetch("/api/chat-responce", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +55,7 @@ const ChatUI = () => {
             name: currentChat.name,
             systemPrompt: currentChat.systemPrompt,
           },
-          messages: [...messages, userMsg],
+          messages: [...(chatHistory[currentChat.id] || []), userMsg],
         }),
       });
 
@@ -60,7 +66,7 @@ const ChatUI = () => {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let botMsg = {
-        id: Date.now(),
+        id: Date.now() + 1,
         text: "",
         sender: "bot",
         timestamp: new Date().toLocaleTimeString([], {
@@ -69,8 +75,12 @@ const ChatUI = () => {
         }),
       };
 
-      setMessages((prev) => [...prev, botMsg]);
+      setChatHistory((prev) => ({
+        ...prev,
+        [currentChat.id]: [...(prev[currentChat.id] || []), botMsg],
+      }));
 
+      //Stream Response
       while (true) {
         const { done, value } = await reader.read();
 
@@ -85,10 +95,10 @@ const ChatUI = () => {
             if (data?.content) {
               botMsg.text += data.content;
 
-              setMessages((prev) => {
-                const updated = [...prev];
+              setChatHistory((prev) => {
+                const updated = [...(prev[currentChat.id] || [])];
                 updated[updated.length - 1] = { ...botMsg };
-                return updated;
+                return { ...prev, [currentChat.id]: updated };
               });
             }
           }
@@ -100,10 +110,9 @@ const ChatUI = () => {
       setIsTyping(false);
     }
   };
-// {Handle submit function ends here--}
+  // {Handle submit function ends here--}
 
-
-// {Handle Key Press function ends here--}
+  // {Handle Key Press function ends here--}
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -181,7 +190,7 @@ const ChatUI = () => {
           ref={chatHistoryRef}
           className="flex-1 overflow-y-auto p-4 space-y-4"
         >
-          {messages.map((message) => (
+          {message.map((message) => (
             <div
               key={message.id}
               className={`flex ${
