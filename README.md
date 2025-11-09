@@ -2,6 +2,8 @@
 
 > "Multi-persona conversational AI built with Next.js, React, and OpenAI."
 
+- # [🚀 Live Demo](https://persona-ai-chi-snowy.vercel.app/)
+
 ---
 
 ## 📸 Preview
